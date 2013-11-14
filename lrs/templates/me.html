@@ -12,76 +12,77 @@
 
 <div class="tab-content">
     <div id="mystatements" class="tab-pane">
-        <form class="form-inline">
-            <label class="checkbox">
-                <input id="my_verb_filter_checkbox" type="checkbox" onclick="getStmts()">
-            </label>
-            Show:
-            <select id="my_verb_filter" onchange="initVerbFilter()">
+        <form class="form-inline" action="javascript:getStmts()">
+            <label>Filter:</label>
+            <select id="my_verb_filter">
                 <option value="">All</option>
                 <option value="http://verbs/interaction/">Desktop Apps</option>
+                <option value="http://verbs/viewed/">Images</option>
                 <option value="http://verbs/read/">Selected Texts</option> 
                 <option value="http://verbs/started/">Quizzes</option>
                 <option value="http://verbs/completed/">Quiz Results</option>
                 <option value="http://verbs/watched/">Videos</option>
                 <option value="http://verbs/experienced/">Webpages</option>
             </select>
-        </form>
-
-        <form class="form-inline">
-            <label class="checkbox">
-                <input id="my_search_checkbox" type="checkbox" onclick="getStmts()">
-            </label>
-            Search:
-            <input id="my_search" type="text">
+            <input id="my_search" type="text" placeholder="Keyword Search">
+            <input id="search_button" type="button" class="btn" value="Search" onclick="getStmts()">
+            <input id="clear_button" type="button" class="btn" value="Clear" onclick="clearFilters()">
         </form></br>        
         <span class="small-link"><a id="delstmts" href="#mystatements" class="btn btn-danger">delete all statements</a></span>
         <h2>Statements:</h2>
     </div>
 
     <div id="publicstatements" class="tab-pane">
-        <form class="form-inline">
-            <label class="checkbox">
-                <input id="public_user_filter_checkbox" type="checkbox" onclick="getPublicStmts()">
-            </label>
-            User:
-            <input id="public_user_filter" type="text">
-        </form>
-        <form class="form-inline">
-            <label class="checkbox">
-                <input id="public_verb_filter_checkbox" type="checkbox" onclick="getPublicStmts()">
-            </label>
-            Show:
-            <select id="public_verb_filter" onchange="initPublicVerbFilter()">
+        <form class="form-inline" action="javascript:getPublicStmts()">
+            <label>Filter:</label>
+            <input id="public_user_filter" type="text" placeholder="User">
+            <select id="public_verb_filter">
                 <option value="">All</option>
                 <option value="http://verbs/interaction/">Desktop Apps</option>
+                <option value="http://verbs/viewed/">Images</option>
                 <option value="http://verbs/read/">Selected Texts</option> 
                 <option value="http://verbs/started/">Quizzes</option>
                 <option value="http://verbs/completed/">Quiz Results</option>
                 <option value="http://verbs/watched/">Videos</option>
                 <option value="http://verbs/experienced/">Webpages</option>
             </select>
-        </form>
-        <form class="form-inline">
-            <label class="checkbox">
-                <input id="public_search_checkbox" type="checkbox" onclick="getPublicStmts()">
-            </label>
-            Search:
-            <input id="public_search" type="text"></br>
+            <input id="public_search" type="text" placeholder="Keyword Search">
+            <input id="public_search_button" type="button" class="btn" value="Search" onclick="getPublicStmts()">
+            <input id="public_clear_button" type="button" class="btn" value="Clear" onclick="clearPublicFilters()">
         </form>
         <h2>Public Feed:</h2>
     </div>
 
     <div id="groupstatements" class="tab-pane">
-        <form class="form-inline" name="groupForm" action="javascript:create_group()">
+        <form class="form-inline" action="javascript:getStmts_Groups(null, $('#statement_column'))">
+            <label>Filter</label>
+            <input id="group_user_filter" type="text" placeholder="User">
+            <select id="group_verb_filter" onchange="initGroupVerbFilter()">
+                <option value="">All</option>
+                <option value="http://verbs/interaction/">Desktop Apps</option>
+                <option value="http://verbs/viewed/">Images</option>
+                <option value="http://verbs/read/">Selected Texts</option> 
+                <option value="http://verbs/started/">Quizzes</option>
+                <option value="http://verbs/completed/">Quiz Results</option>
+                <option value="http://verbs/watched/">Videos</option>
+                <option value="http://verbs/experienced/">Webpages</option>
+            </select>
+            <input id="group_search" type="text" placeholder="Keyword Search">
+            <input id="group_search_button" type="button" class="btn" value="Search" onclick="getStmts_Groups(null, $('#statement_column'))">
+            <input id="group_clear_button" type="button" class="btn" value="Clear" onclick="clearGroupFilters()">
+        </form>
+
+        <form class="form-inline" name="groupForm">
                 Group Name:
                 <input type="text" id="group_text"/>
-                <input name="Submit" type="submit" value="Create" class="btn"/>
+                <input type="button" value="Create" onclick="create_group()" class="btn"/>
+                <input type="button" value="Auto-Create" onclick="auto_create_group()" class="btn"/>
         </form>
+        <div id="nameAlert" class="alert alert-danger hide">Enter Group Name</div>
         <div class="container">
             <div class="row">
-                <div id="group_column" class="span5">
-                    <h3>Groups:</h3>
+                <div id="group_column" class="span6" style="margin-right:1em;">
+                    <h3>Groups:</h3><span class="small-link">Create groups</span>
                 </div>
 
                 <div id="statement_column" class="span5">
@@ -93,7 +94,7 @@
 </div>
 {% endblock content %}
 {% block extra_js %}
-<script src="{{ STATIC_URL }}scripts/jquery.easytabs.min.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}scripts/jquery.dragdrop.min.js" type="text/javascript"></script>
 <script src="{{ STATIC_URL }}scripts/jquery.hashchange.min.js" type="text/javascript"></script>
 <script type="text/javascript">
 var feedTimeout = null;
@@ -104,9 +105,6 @@ $(document).ready(function() {
     //getStmts();
     $('#myTab a:first').tab('show');
     $(".stmt_link").click(stmtClick);
-    $('#tab-container').easytabs({
-        defaultTab: "li.default"
-    });
     if ($('#mystatements').hasClass('active') && ! $('#mystatements ul').length){
         getStmts();
     }
@@ -117,21 +115,6 @@ $(document).ready(function() {
         getGroups();
         getStmts_Groups(null, $('#statement_column'));
     }
-    $('#tab-container').bind('easytabs:after', function(event, $clicked, $targetPanel, settings){
-        if ($targetPanel.attr("id") == "mystatements"){
-            //clearFilters();
-            getStmts();
-        }
-         if ($targetPanel.attr("id") == "publicstatements"){
-            //clearFilters();
-            getPublicStmts();
-        }
-        if ($targetPanel.attr("id") == "groupstatements"){
-            //clearFilters();
-            getGroups();
-            getStmts_Groups(null, $('#statement_column'));
-        }       
-    });
     $('a[data-toggle="tab"]').on('show', function (e) {
         if ($(event.target).attr("href") == "#mystatements"){
             //clearFilters();
@@ -167,8 +150,37 @@ $(document).ready(function() {
 function clearFilters(){
     var e = document.getElementById("my_verb_filter");
     e.selectedIndex = 0;
-    e = document.getElementById("public_verb_filter");
+
+    e = document.getElementById("my_search");
+    e.value = "";
+
+    getStmts();
+}
+
+function clearPublicFilters(){
+    var e = document.getElementById("public_verb_filter");
     e.selectedIndex = 0;
+
+    e = document.getElementById("public_search");
+    e.value = "";  
+
+    e = document.getElementById("public_user_filter");
+    e.value = "";
+
+    getPublicStmts();
+}
+
+function clearGroupFilters(){
+    var e = document.getElementById("group_verb_filter");
+    e.selectedIndex = 0;
+
+    e = document.getElementById("group_search");
+    e.value = "";  
+
+    e = document.getElementById("group_user_filter");
+    e.value = "";
+
+    getStmts_Groups(null, $('#statement_column'))
 }
 
 function getGroups(event){
@@ -193,6 +205,12 @@ function getGroups(event){
                 }
                 $(this).children('ul').find('.group-link').click(groupClick);
                 $(this).children('ul').find('.delete-group-link').click(deleteGroup);
+                $(this).children('ul').find('.group-field').droppable({
+                    accept: ".statement",
+                    drop: dropStmt,
+                    over: overGroup,
+                    out: outGroup
+                });
                 $(this).children('ul').find('li.prev-next a.previous').click(
                         {the_url: $(this).children('ul').find('li.prev-next a.previous').attr("data-target")}, getGroups);
                 $(this).children('ul').find('li.prev-next a.next').click(
@@ -234,10 +252,10 @@ function getGroupStatements(event, groupid, ele){
     $.ajax({
             url: u,
             type: "GET",
-            data: { 'group_id': groupid},
+            data: { 'group_id': groupid },
             success: function (data){
                 if(!$(ele).children('div#stmts').length){
-                    $(ele).find('span.group-content').after('<div id="stmts" class="row collapse" style="margin-top:2em;"></div>');
+                    $(ele).find('span.group-content').after('<div id="stmts" class="collapse" style="margin-top:2em;"></div>');
                 }
                 ele = $(ele).find('div#stmts');
 
@@ -249,7 +267,7 @@ function getGroupStatements(event, groupid, ele){
                 }
 
 
-                $(ele).children('ul').find('div.statement').addClass('span4');
+                $(ele).children('ul').find('div.statement').addClass('span5');
                 $(ele).children('ul').find('a.remove-link').click(removeStatement);
                 $(ele).children('ul').find('.stmt_link').click(stmtClick);
                 $(ele).children('ul').find('li.prev-next a.previous').click(
@@ -276,7 +294,7 @@ function groupClick(event){
     }
     findDiv = $(ele).siblings('div#stmts').length;
     if(findDiv===0){
-        getGroupStatements(null, $(ele).parent().attr("id"), $(ele).parent());
+        getGroupStatements(null, $(ele).parent().attr("id"), $(ele).parents('.group-field'));
     }
     else{
         $(ele).siblings('div#stmts').collapse('toggle');
@@ -289,7 +307,7 @@ function getStmts_Groups(event, element){
         clearTimeout(feedTimeout);
     }
     var u = "{% url lrs.views.my_statements %}";
-    var ele = $('#mystatements');
+    var ele = $('#statement_column');
 
     if (event){
         if(event.data.the_url) {
@@ -303,20 +321,44 @@ function getStmts_Groups(event, element){
         ele = element;
     }
 
+    var userFilter;
     var verbFilter;
-    var e = document.getElementById("my_verb_filter");
+    var objectFilter;
+
+    var e = document.getElementById("group_verb_filter");
+    //var check = document.getElementById("group_verb_filter_checkbox");
 
     if(e.selectedIndex == 0){
         verbFilter = null;
     }
     else{
-        verbFilter = e.options[e.selectedIndex].value;
+        verbFilter = e.options[e.selectedIndex].value;//myFilters['verb'];
+    }
+
+    e = document.getElementById("group_user_filter");
+    //check = document.getElementById("group_user_filter_checkbox");
+
+    if(!e.value){
+        userFilter = "0";
+    }
+    else{
+        userFilter = e.value;
+    }
+
+    e = document.getElementById("group_search");
+    //check = document.getElementById("group_search_checkbox");
+
+    if(e.value == "") {
+        objectFilter = null;
+    }
+    else {
+        objectFilter = e.value;
     }
 
     $.ajax({
             url: u,
             type: "GET",
-            data: {user_filter:"1", verb_filter:verbFilter},
+            data: {user_filter:userFilter, verb_filter:verbFilter, object_filter:objectFilter},
             context: ele,
             success: function (data){
                 if ($(this).children('ul').length){
@@ -326,6 +368,13 @@ function getStmts_Groups(event, element){
                     $(this).append(groupStmtUIData(data));
                 }
                 $(this).children('ul').find('.stmt_link').click(stmtClick);
+                $(this).children('ul').find('.statement').draggable({
+                    helper: "clone",
+                    start: function(event, ui){
+                        ui.helper.css("opacity", "0.5");
+                        $('#group_column .group-field #stmts').collapse('hide');
+                    }
+                });
                 $(this).children('ul').find('li.prev-next a.previous').click(
                         {
                             the_url: $(this).children('ul').find('li.prev-next a.previous').attr("data-target"),
@@ -346,10 +395,14 @@ function getStmts_Groups(event, element){
 
 function startDrag(event){
     // Add target to event data
-    event.dataTransfer.setData("Text", event.target.id);
+    var ele = event.target;
+    if(!$(ele).hasClass('statement')){
+        ele = $(ele).parents('.statements');
+    }
+    event.dataTransfer.setData("Text", $(ele).attr('href'));
 }
 
-function dropStmt(event){
+function dropStmt(event, ui){
     event.preventDefault();
     var ele = event.target;
     if(!$(ele).hasClass('group-field')){
@@ -357,10 +410,13 @@ function dropStmt(event){
     }
 
     // First, retreive dropped item's id and group id
-    var stmt_id = event.dataTransfer.getData("Text");
+    //var stmt_id = event.dataTransfer.getData("Text");
+    var stmt_id = ui.draggable.attr('href');
     var group_id = $(ele).attr('id');
-    var sendData = { 'stmt_id': stmt_id, 'group_id': group_id };
-    
+    var sendData = { 
+        'group_id': group_id,
+        'stmts': [stmt_id]
+    };
 
     // Next, send post request to add stmt_id to group_id
     $.ajax({
@@ -381,6 +437,22 @@ function allowDrop(event){
     event.preventDefault();
 }
 
+function overGroup(event, ui){
+    ele = event.target;
+    findDiv = $(ele).find('div#stmts').length;
+    if(findDiv===0){
+        getGroupStatements(null, $(ele).attr("id"), $(ele));
+    }
+    else{
+        $(ele).find('div#stmts').collapse('show');
+    }
+    return false;
+}
+
+function outGroup(event, ui){
+    $(event.target).find('div#stmts').collapse('hide');
+}
+
 function groupUIData(data){
 
     if(data['groups'].length == 0) {
@@ -391,7 +463,8 @@ function groupUIData(data){
     for (var i = 0; i < data['groups'].length; i++) {
         var grp = data['groups'][i];
         // Group title
-        ret += "<li><div id='" + grp['id'] +"' class='group-field' ondrop='dropStmt(event)' ondragover='allowDrop(event)'>" + grp['name'];
+        //ret += "<li><div id='" + grp['id'] +"' class='group-field' ondrop='dropStmt(event)' ondragover='allowDrop(event)'>" + grp['name'];
+        ret += "<li><div id='" + grp['id'] +"' class='group-field'>" + grp['name'];
         // Open Group link
         ret += "<a class='group-link btn btn-primary pull-right' href='#" + grp['id'] + "'>Open</a>";
         // Delete Group link
@@ -417,7 +490,7 @@ function groupUIData(data){
 
 function removeStatement(event){
 
-    var stmtid = $(event.target).parents("div.statement").attr('id');
+    var stmtid = $(event.target).parents("div.statement").attr('href');
     var groupid = $(event.target).parents("div.group-field").attr('id');
 
     $.ajax({
@@ -448,15 +521,17 @@ function groupStmtUIData(data, grpid){
      for (var i = 0; i < data['stmts'].length; i++) {
         var stmt = data['stmts'][i];
         /////////////////////////
-        ret += "<li><div class='row'><div class='statement ";
+        ret += "<li><div class='row'><div class='statement span5";
 
-        ret += "' href='" + stmt['statement_id'] + "' draggable='true' ondragstart='startDrag(event)'>";
+        //ret += "' href='" + stmt['statement_id'] + "' draggable='true' ondragstart='startDrag(event)'>";
+        ret += "' href='" + stmt['statement_id'] + "'>";
+
         ret += "<div class='row'>";
         ret += "<div class='";
         if(grpid){
-            ret += "span4'>";
+            ret += "span3'>";
         }else{
-            ret += "span5'>";
+            ret += "span4'>";
         }
 
         ret += stmt['actor_name'] + " ";
@@ -498,10 +573,12 @@ function groupStmtUIData(data, grpid){
 }
 
 function verbClick(event){
+    clearTimeout(feedTimeout);
+
     if(event && event.currentTarget){
         ele = event.target;
     }
-    var stmtid = $(ele).attr("href");
+    var stmtid = $(ele).parents('.statement').attr("href");
 
     initStmtOff = true;
 
@@ -514,45 +591,48 @@ function verbClick(event){
             //myFilters['verb'] = verb['id'];
 
             var e = document.getElementById("my_verb_filter");
-            var check = document.getElementById("my_verb_filter_checkbox");
             switch(verb['id'])
             {
                 case("http://verbs/completed/"):
-                    e.selectedIndex = 4;
+                    e.selectedIndex = 5;
                     break;
                 case("http://verbs/experienced/"):
-                    e.selectedIndex = 6;
+                    e.selectedIndex = 7;
                     break;
                 case("http://verbs/interaction/"):
                     e.selectedIndex = 1;
                     break;
-                case("http://verbs/read/"):
+                case("http://verbs/viewed"):
                     e.selectedIndex = 2;
                     break;
-                case("http://verbs/started/"):
+                case("http://verbs/read/"):
                     e.selectedIndex = 3;
                     break;
+                case("http://verbs/started/"):
+                    e.selectedIndex = 4;
+                    break;
                 case("http://verbs/watched/"):
-                    e.selectedIndex = 5;
+                    e.selectedIndex = 6;
                     break;
             }
-            check.checked = true;
-
             getStmts();
             //getStmts(null, null, verb['id']);
         },
         error: function(xhr, ajaxOptions, thrownError){
-            alert(thrownError)
+            alert("verb click error")
         },
         timeout : 15000
     });    
 }
 
 function publicVerbClick(event){
+
+    clearTimeout(feedTimeout);
     if(event && event.currentTarget){
         ele = event.target;
     }
-    var stmtid = $(ele).attr("href");
+
+    var stmtid = $(ele).parents('.statement').attr("href");
 
     initStmtOff = true;
 
@@ -568,25 +648,27 @@ function publicVerbClick(event){
             switch(verb['id'])
             {
                 case("http://verbs/completed/"):
-                    e.selectedIndex = 4;
+                    e.selectedIndex = 5;
                     break;
                 case("http://verbs/experienced/"):
-                    e.selectedIndex = 6;
+                    e.selectedIndex = 7;
                     break;
                 case("http://verbs/interaction/"):
                     e.selectedIndex = 1;
                     break;
-                case("http://verbs/read/"):
+                case("http://verbs/viewed"):
                     e.selectedIndex = 2;
                     break;
-                case("http://verbs/started/"):
+                case("http://verbs/read/"):
                     e.selectedIndex = 3;
                     break;
+                case("http://verbs/started/"):
+                    e.selectedIndex = 4;
+                    break;
                 case("http://verbs/watched/"):
-                    e.selectedIndex = 5;
+                    e.selectedIndex = 6;
                     break;
             }
-
             getPublicStmts();
         },
         error: function(xhr, ajaxOptions, thrownError){
@@ -652,19 +734,17 @@ function getPublicStmts(event){
     var objectFilter;
 
     var e = document.getElementById("public_verb_filter");
-    var check = document.getElementById("public_verb_filter_checkbox");
 
-    if(e.selectedIndex == 0 || !check.checked){
+    if(e.selectedIndex == 0){
         verbFilter = null;
     }
     else{
-        verbFilter = e.options[e.selectedIndex].value;//myFilters['verb'];
+        verbFilter = e.options[e.selectedIndex].value;
     }
 
     e = document.getElementById("public_user_filter");
-    check = document.getElementById("public_user_filter_checkbox");
 
-    if(!e.value || !check.checked){
+    if(!e.value){
         userFilter = "0";
     }
     else{
@@ -672,9 +752,9 @@ function getPublicStmts(event){
     }
 
     e = document.getElementById("public_search");
-    check = document.getElementById("public_search_checkbox");
+    //check = document.getElementById("public_search_checkbox");
 
-    if(!check.checked || e.value == "") {
+    if(e.value == "") {
         objectFilter = null;
     }
     else {
@@ -705,8 +785,8 @@ function getPublicStmts(event){
             },
             timeout : 15000
         });
-    if(!inPage)
-        feedTimeout = setTimeout(getPublicStmts, 10000);
+    /*if(!inPage)
+        feedTimeout = setTimeout(getPublicStmts, 10000);*/
 }
 
 function getStmts(event, element){
@@ -731,19 +811,17 @@ function getStmts(event, element){
     var verbFilter;
     var objectFilter;
     var e = document.getElementById("my_verb_filter");
-    var check = document.getElementById("my_verb_filter_checkbox");
 
-    if(e.selectedIndex == 0 || !check.checked){
+    if(e.selectedIndex == 0){
         verbFilter = null;
     }
     else{
-        verbFilter = e.options[e.selectedIndex].value;//myFilters['verb'];
+        verbFilter = e.options[e.selectedIndex].value;
     }
 
     e = document.getElementById("my_search");
-    check = document.getElementById("my_search_checkbox");
 
-    if(!check.checked || e.value == "") {
+    if(e.value == "") {
         objectFilter = null;
     }
     else {
@@ -796,7 +874,8 @@ function uiData(data, context, deletable){
 		ret += "<div class='row'>";
 		ret += "<div class='span5'>";
 		ret += stmt['actor_name'] + " ";
-        ret += "<a class='verb_link' href='" + stmt['statement_id'] + "'>" + stmt['verb'] + "</a>" + " ";
+        //ret += "<a class='verb_link' href='" + stmt['statement_id'] + "'>" + stmt['verb'] + "</a>" + " ";
+        ret += "<a class='verb_link'>" + stmt['verb'] + "</a>" + " ";
         ret += stmt['object'];
 		ret += "</div>";
 		
@@ -949,15 +1028,100 @@ function syntaxHighlight(json) {
     return json.replace(/(\}|\])/g, function(match){return '</span>' + match + '</span>'});
 }
 
-function create_group (){
+function create_group (callback){
     var groupname = $("#group_text").val();
+    if(!groupname) {
+        //alert("Enter Group Name");
+        $("#nameAlert").fadeIn(500);
+        $("#nameAlert").delay(3000).fadeOut(500);
+    }
+    else
+    { 
     $.ajax({
             url: "{% url lrs.views.my_groups %}",
             type: "POST",
             data: { name : groupname },
-            success: function(){
+            success: function(data){
                 $("#group_text").val("");
                 getGroups();
+                if(callback){
+                    callback(data);
+                }
+            },
+            error: function(xhr, ajaxOptions, thrownError){
+                alert(thrownError);
+            },
+            timeout : 15000
+        });
+    }
+}
+
+function auto_create_group(){
+    var u = "{% url lrs.views.my_statements %}";
+    var ele = $('#statement_column');
+
+    var userFilter;
+    var verbFilter;
+    var objectFilter;
+
+    var e = document.getElementById("group_verb_filter");
+
+    if(e.selectedIndex == 0){
+        verbFilter = null;
+    }
+    else{
+        verbFilter = e.options[e.selectedIndex].value;//myFilters['verb'];
+    }
+
+    e = document.getElementById("group_user_filter");
+
+    if(!e.value){
+        userFilter = "0";
+    }
+    else{
+        userFilter = e.value;
+    }
+
+    e = document.getElementById("group_search");
+
+    if(e.value == "") {
+        objectFilter = null;
+    }
+    else {
+        objectFilter = e.value;
+    }
+
+    // This request will result in a total of 4 requests.
+    $.ajax({
+            url: u,
+            type: "GET",
+            data: {user_filter:userFilter, verb_filter:verbFilter, object_filter:objectFilter},
+            context: ele,
+            success: function (data){
+                create_group(function(group_id){
+
+                    sendData = {
+                        'group_id': group_id,
+                        'stmts': []
+                    };
+
+                    for (var i = 0; i < data['stmts'].length; i++) {
+                        sendData['stmts'][i] = data['stmts'][i]['statement_id'];
+                    };
+                    // Group created, add all statements
+                    $.ajax({
+                        url: "{% url lrs.views.my_groups %}",
+                        type: "POST",
+                        data: sendData,
+                        success: function (){
+                            getGroupStatements(null, group_id, $("#"+group_id));
+                        },
+                        error: function(xhr, ajaxOptions, thrownError){
+                            alert(thrownError);
+                        },
+                        timeout : 15000
+                    });
+                });
             },
             error: function(xhr, ajaxOptions, thrownError){
                 alert(thrownError);

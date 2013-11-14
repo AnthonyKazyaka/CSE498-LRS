@@ -310,8 +310,8 @@ def my_statements(request):
                 d['object'] = stmtobj.get_a_name()
 
                 searchstring = stmtobj.get_search_index()
-                if objectFilter:
-                    if objectFilter in searchstring:
+                if not objectFilter == "" :
+                    if objectFilter.lower() in searchstring.lower():
                         slist.append(d)
                 else:
                     slist.append(d)
@@ -345,7 +345,7 @@ def my_groups(request):
             group_id = request.GET.get("group_id", None)
             stmt_id = request.GET.get("stmt_id", None)
             if stmt_id and group_id:
-                s = models.Statement.objects.get(user=request.user, statement_id=stmt_id)
+                s = models.Statement.objects.get(statement_id=stmt_id)
                 models.Group.objects.get(user=request.user, id=group_id).statements.remove(s)
                 stmt = models.Group.objects.get(user=request.user, id=group_id).statements.filter(user=request.user, statement_id=stmt_id)
                 if not stmt:
@@ -370,17 +370,20 @@ def my_groups(request):
 
                 new_group = models.Group(name=name, user=request.user)
                 new_group.save()
-                return HttpResponse(status=204)
+                s = new_group.id
+                return HttpResponse(json.dumps(s), mimetype="application/json", status=200)
+                #return HttpResponse(status=204)
 
             group_id = request.POST.get('group_id', None)
-            stmt_id = request.POST.get('stmt_id', None)
-            if group_id and stmt_id:
-                stmt = models.Statement.objects.get(user=request.user, statement_id=stmt_id)
+            stmts = request.POST.getlist('stmts[]', None)
+            if group_id:
                 group = models.Group.objects.get(user=request.user, id=group_id)
-                if group and stmt:
+
+                for stmt_id in stmts:
+                    stmt = models.Statement.objects.get(statement_id=stmt_id)
                     group.statements.add(stmt)
-                    return HttpResponse(status=204)
-                return HttpResponse(json.dumps({"error_message":"invalid group and/or statement"}), status=400)
+
+                return HttpResponse(status=204)
             else:
                 raise Exception("Invalid POST method")
 
